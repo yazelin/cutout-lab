@@ -28,42 +28,42 @@ let sampleLoadSequence = 0;
 
 const sampleDefinitions = {
   hair: {
-    image: 'assets/examples/green-dark-hair-v2.png',
+    image: 'assets/examples/green-dark-hair-v2.webp',
     key: '#00ff00',
     keyFromCorners: true,
     caption: '綠幕・深色髮絲',
     insight: '深色長髮和細髮絲落在綠幕前，適合比較邊緣 alpha 與去色汙。'
   },
   collision: {
-    image: 'assets/examples/green-collision-brooch.png',
+    image: 'assets/examples/green-collision-brooch.webp',
     key: '#00ff00',
     keyFromCorners: true,
     caption: '綠幕・撞色配件',
     insight: '胸前亮綠胸針和幕色相同；色鍵可能挖掉胸針，連通區域法則有機會保住封閉細節。'
   },
   blue: {
-    image: 'assets/examples/blue-screen-warm-portrait.png',
+    image: 'assets/examples/blue-screen-warm-portrait.webp',
     key: '#0000ff',
     keyFromCorners: true,
     caption: '藍幕・暖色衣著與深色頭髮',
     insight: '藍幕主要看 B 通道是否高過 R、G；暖色衣著和深髮提供對照，若主體含藍色也可能一起被去掉。'
   },
   cyan: {
-    image: 'assets/examples/cyan-screen-burgundy-portrait.png',
+    image: 'assets/examples/cyan-screen-burgundy-portrait.webp',
     key: '#00ffff',
     keyFromCorners: true,
     caption: '青幕・酒紅衣著',
     insight: '青幕同時看 G、B 是否高過 R；這是自訂幕色的例子，青綠或藍綠主體也可能和背景混在一起。'
   },
   yellow: {
-    image: 'assets/examples/yellow-screen-navy-portrait.png',
+    image: 'assets/examples/yellow-screen-navy-portrait.webp',
     key: '#ffff00',
     keyFromCorners: true,
     caption: '黃幕・深色服裝',
     insight: '黃幕同時看 R、G 是否高過 B；這是自訂幕色的例子，暖色膚色或黃色物件可能被誤當成背景。'
   },
   busy: {
-    image: 'assets/examples/park-portrait.png',
+    image: 'assets/examples/park-portrait.webp',
     key: '#00ff00',
     caption: '照片・複雜背景',
     insight: '這張自然照片不適合 chroma key（色鍵）去背，因為背景沒有單一、均勻的幕色。這個範例刻意展示色鍵在複雜背景下的限制：背景會殘留，與幕色相近的樹葉或衣物也可能被誤刪。'
