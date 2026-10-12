@@ -69,6 +69,7 @@ h1, h2, h3, p { margin-top: 0; }
 .sample-button img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; }
 .sample-button span { display: block; padding-top: 5px; white-space: nowrap; }
 .sample-button span b { margin-right: 3px; color: #929b96; font: 700 8px/1 monospace; }
+.sample-warning { display: block; margin-top: 3px; color: #a4483b; font-size: 7px; font-weight: 800; line-height: 1.2; }
 .sample-button:hover { border-color: #829984; }
 .sample-button.is-active { background: #fff7ff; border-color: #b72bab; color: #65255f; box-shadow: 0 0 0 1px #b72bab; }
 .upload-button { position: relative; white-space: nowrap; flex-shrink: 0; }

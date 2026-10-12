@@ -45,7 +45,7 @@ const sampleDefinitions = {
     image: 'assets/examples/park-portrait.png',
     key: '#00ff00',
     caption: '照片・複雜背景',
-    insight: '公園照片沒有單一幕色；用綠色取樣會連樹葉和衣物一起影響，適合看色鍵的適用邊界。'
+    insight: '這張自然照片不適合 chroma key（色鍵）去背，因為背景沒有單一、均勻的幕色。這個範例刻意展示色鍵在複雜背景下的限制：背景會殘留，與幕色相近的樹葉或衣物也可能被誤刪。'
   },
   pose1: {
     image: 'assets/examples/byog-ref-B2-1.png',
