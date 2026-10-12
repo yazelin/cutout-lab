@@ -15,50 +15,77 @@ const methodSummary = document.getElementById('method-summary');
 const liveInsight = document.getElementById('live-insight');
 const imageSize = { width: 560, height: 360 };
 const formulaNotes = {
-  '#00ff00': '目前選擇綠幕。純綠分數高；非綠主體通常分數低。分數可用來估算邊緣混入多少幕色。',
-  '#ff00ff': '目前選擇洋紅幕。紅、藍必須同時佔優；少一個通道都不算純洋紅。紅色主體可能和幕色重疊。',
-  '#0000ff': '目前選擇藍幕。藍通道必須高過紅、綠；不能沿用綠幕或洋紅幕的固定公式。',
+  green: '目前選擇綠幕。純綠分數高；非綠主體通常分數低。分數可用來估算邊緣混入多少幕色。',
+  magenta: '目前選擇洋紅幕。紅、藍必須同時佔優；少一個通道都不算純洋紅。紅色主體可能和幕色重疊。',
+  blue: '目前選擇藍幕。藍通道必須高過紅、綠；不能沿用綠幕或洋紅幕的固定公式。',
   custom: '目前是自訂幕色。演算法依幕色的高通道組合計分；黑、白、灰缺少色度差，無法安全用色鍵分離。'
 };
 
-let currentSample = 'pose1';
+let currentSample = 'hair';
 let sourceIsUpload = false;
 let pendingFrame = 0;
 let sampleLoadSequence = 0;
 
 const sampleDefinitions = {
+  hair: {
+    image: 'assets/examples/green-dark-hair-v2.png',
+    key: '#00ff00',
+    keyFromCorners: true,
+    caption: '綠幕・深色髮絲',
+    insight: '深色長髮和細髮絲落在綠幕前，適合比較邊緣 alpha 與去色汙。'
+  },
+  collision: {
+    image: 'assets/examples/green-collision-brooch.png',
+    key: '#00ff00',
+    keyFromCorners: true,
+    caption: '綠幕・撞色配件',
+    insight: '胸前亮綠胸針和幕色相同；色鍵可能挖掉胸針，連通區域法則有機會保住封閉細節。'
+  },
+  busy: {
+    image: 'assets/examples/park-portrait.png',
+    key: '#00ff00',
+    caption: '照片・複雜背景',
+    insight: '公園照片沒有單一幕色；用綠色取樣會連樹葉和衣物一起影響，適合看色鍵的適用邊界。'
+  },
   pose1: {
     image: 'assets/examples/byog-ref-B2-1.png',
+    key: '#ff00ff',
     caption: '洋紅幕・站姿與長髮（B2-1）',
     insight: '長髮與花飾在洋紅背景前，適合觀察細線條、髮絲和半透明邊緣。'
   },
   pose2: {
     image: 'assets/examples/byog-ref-B2-2.png',
+    key: '#ff00ff',
     caption: '洋紅幕・坐姿（B2-2）',
     insight: '坐姿的手腳和衣物靠近畫面下緣；檢查輪廓有沒有被容差或侵蝕吃掉。'
   },
   pose3: {
     image: 'assets/examples/byog-ref-B2-3.png',
+    key: '#ff00ff',
     caption: '洋紅幕・揮手與飄葉（B2-3）',
     insight: '揮起的手、髮絲和飄落小葉彼此分離；看看細小綠色碎片是否被錯當成背景。'
   },
   pose4: {
     image: 'assets/examples/byog-ref-B2-4.png',
+    key: '#ff00ff',
     caption: '洋紅幕・思考姿勢（B2-4）',
     insight: '手指和頭髮靠得很近；放大觀察這些相鄰輪廓是否因容差而黏在一起或被削掉。'
   },
   pose5: {
     image: 'assets/examples/byog-ref-B2-5.png',
+    key: '#ff00ff',
     caption: '洋紅幕・歡呼與飄葉（B2-5）',
     insight: '雙手與衣袖抬高，外輪廓和零散葉片都能用來檢查遮罩是否完整。'
   },
   pose6: {
     image: 'assets/examples/byog-ref-B2-6.png',
+    key: '#ff00ff',
     caption: '洋紅幕・苦惱姿勢（B2-6）',
     insight: '雙手靠近臉、頭髮和衣服；觀察調整容差與邊緣修色後，交界細節如何改變。'
   },
   pose7: {
     image: 'assets/examples/byog-ref-B2-7.png',
+    key: '#ff00ff',
     caption: '洋紅幕・全身小比例（B2-7）',
     insight: '人物在畫面中較小；比較大面積洋紅背景能否清乾淨，同時保住完整的小輪廓。'
   }
@@ -89,7 +116,7 @@ function setCanvasDimensions(width, height) {
   });
 }
 
-function drawSample(kind, keyHex) {
+function drawSample(kind, keyHex, deriveSampleKey) {
   const sample = sampleDefinitions[kind];
   if (!sample) return;
 
@@ -106,7 +133,10 @@ function drawSample(kind, keyHex) {
     output.clearRect(0, 0, width, height);
     output.drawImage(image, 0, 0, width, height);
     sampleCaption.textContent = sample.caption;
-    updateKeyFormula(keyHex);
+    const activeKey = deriveSampleKey && sample.keyFromCorners
+      ? setKeySelection(readCornerKey())
+      : keyHex;
+    updateKeyFormula(activeKey);
     document.querySelectorAll('.sample-button').forEach(function (button) {
       const selected = button.dataset.sample === kind;
       button.classList.toggle('is-active', selected);
@@ -379,10 +409,13 @@ function updateInsight() {
   const mode = methodSelect.value;
   const spillOn = document.getElementById('despill').checked;
   const sample = sampleDefinitions[currentSample];
+  const keyName = {
+    green: '綠幕', magenta: '洋紅幕', blue: '藍幕', custom: '自訂幕色'
+  }[classifyKey(keyInput.value)];
   const methodNotes = {
-    distance: '色差法按 RGB 距離清除洋紅像素；調高容差，觀察外輪廓和綠色配件的變化。',
-    dominance: '通道優勢法估算幕色覆蓋比例；比較髮絲周圍的半透明像素，以及綠色主體細節。',
-    connected: '邊界連通法只清除連到畫面邊界的洋紅區；封閉在主體裡的洋紅色仍可能留下。'
+    distance: '色差法按 RGB 距離清除接近' + keyName + '的像素；調高容差，觀察背景殘色和主體細節的取捨。',
+    dominance: '通道優勢法以' + keyName + '的通道分數估 alpha；主體本身含有幕色時也可能被一起清除。',
+    connected: '邊界連通法只清除連到畫面邊界的' + keyName + '區域；封閉在主體裡的同色細節可能留下。'
   };
   let text = (sample ? sample.insight : '') + ' ' + methodNotes[mode];
   if (spillOn && mode !== 'connected') {
@@ -393,13 +426,21 @@ function updateInsight() {
   liveInsight.textContent = text;
 }
 
-function selectKey(hex) {
+function setKeySelection(hex) {
   const normalized = hex.toLowerCase();
+  const category = classifyKey(normalized);
   keyInput.value = normalized;
   document.querySelectorAll('.color-swatch').forEach(function (button) {
-    button.classList.toggle('is-selected', button.dataset.key.toLowerCase() === normalized);
+    const sameColor = button.dataset.key.toLowerCase() === normalized;
+    const sameCategory = category !== 'custom' && classifyKey(button.dataset.key) === category;
+    button.classList.toggle('is-selected', sameColor || sameCategory);
   });
   updateKeyFormula(normalized);
+  return normalized;
+}
+
+function selectKey(hex) {
+  const normalized = setKeySelection(hex);
   if (!sourceIsUpload) {
     drawSample(currentSample, normalized);
     return;
@@ -407,18 +448,26 @@ function selectKey(hex) {
   scheduleProcess();
 }
 
+function classifyKey(hex) {
+  const rgb = hexToRgb(hex.toLowerCase());
+  const red = rgb[0];
+  const green = rgb[1];
+  const blue = rgb[2];
+  if (green > Math.max(red, blue) * 1.25) return 'green';
+  if (red > green * 1.25 && blue > green * 1.25) return 'magenta';
+  if (blue > Math.max(red, green) * 1.25) return 'blue';
+  return 'custom';
+}
+
 function updateKeyFormula(hex) {
-  const normalized = hex.toLowerCase();
-  const formula = normalized === '#00ff00' ? 'green' :
-    normalized === '#ff00ff' ? 'magenta' :
-      normalized === '#0000ff' ? 'blue' : '';
+  const formula = classifyKey(hex);
   document.querySelectorAll('.formula-tile').forEach(function (tile) {
     tile.classList.toggle('is-current', tile.dataset.formula === formula);
   });
-  document.getElementById('formula-note').textContent = formulaNotes[normalized] || formulaNotes.custom;
+  document.getElementById('formula-note').textContent = formulaNotes[formula];
 }
 
-function sampleCorners() {
+function readCornerKey() {
   const width = imageSize.width;
   const height = imageSize.height;
   const data = sourceCanvas.getContext('2d').getImageData(0, 0, width, height).data;
@@ -436,7 +485,11 @@ function sampleCorners() {
     channel.sort(function (a, b) { return a - b; });
     return channel[Math.floor(channel.length / 2)];
   });
-  selectKey(rgbToHex(medians));
+  return rgbToHex(medians);
+}
+
+function sampleCorners() {
+  selectKey(readCornerKey());
   document.getElementById('tolerance-help').textContent = '已取四角中位色。若四角是主體、陰影或不同背景，請手動指定幕色。';
 }
 
@@ -472,7 +525,10 @@ function loadImage(file) {
 
 document.querySelectorAll('.sample-button').forEach(function (button) {
   button.addEventListener('click', function () {
-    drawSample(button.dataset.sample, keyInput.value);
+    const sample = sampleDefinitions[button.dataset.sample];
+    if (!sample) return;
+    const key = setKeySelection(sample.key || keyInput.value);
+    drawSample(button.dataset.sample, key, true);
   });
 });
 document.querySelectorAll('.color-swatch').forEach(function (button) {
@@ -490,4 +546,4 @@ document.getElementById('erode').addEventListener('change', scheduleProcess);
 document.getElementById('sample-border').addEventListener('click', sampleCorners);
 uploadInput.addEventListener('change', function (event) { loadImage(event.target.files[0]); });
 
-drawSample('pose1', keyInput.value);
+drawSample('hair', keyInput.value, true);

@@ -47,8 +47,8 @@ h1, h2, h3, p { margin-top: 0; }
 .button-dark:hover { background: #314841; }
 .button-light { background: var(--card); border-color: var(--line); color: var(--ink); }
 
-.hero-art { height: 340px; max-width: 485px; width: 100%; margin-left: auto; position: relative; border: 1px solid #d5d9d2; overflow: hidden; background: #ff00ff; box-shadow: 18px 18px 0 #e6e2d7; }
-.hero-sample { display: block; width: 100%; height: 100%; object-fit: contain; }
+.hero-art { height: 340px; max-width: 485px; width: 100%; margin-left: auto; position: relative; border: 1px solid #d5d9d2; overflow: hidden; background: #e6e2d7; box-shadow: 18px 18px 0 #e6e2d7; }
+.hero-sample { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center 18%; }
 .hero-art-label { position: absolute; left: 14px; bottom: 14px; display: flex; align-items: center; gap: 10px; padding: 9px 11px; background: rgba(39, 31, 40, .86); color: #fff; font: 700 10px/1 monospace; letter-spacing: .06em; }
 .hero-art-label strong { color: #ffc5ff; font-family: inherit; }
 .hero-note { position: absolute; bottom: 30px; left: clamp(24px, 8vw, 130px); color: #748078; font-size: 10px; letter-spacing: .05em; }
@@ -64,7 +64,7 @@ h1, h2, h3, p { margin-top: 0; }
 .workbench-top { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 22px; }
 .sample-picker { min-width: 0; flex: 1 1 560px; }
 .control-label, .control-card legend { display: block; color: #2d3e3e; font-size: 12px; font-weight: 800; }
-.sample-buttons { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; width: 100%; max-width: 560px; margin-top: 9px; }
+.sample-buttons { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; width: 100%; max-width: 560px; margin-top: 9px; }
 .sample-button { min-width: 0; padding: 5px; border: 1px solid #d6ded8; border-radius: 2px; background: #fff; color: #53625f; font-size: 9px; font-weight: 700; cursor: pointer; }
 .sample-button img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; }
 .sample-button span { display: block; padding-top: 5px; white-space: nowrap; }
