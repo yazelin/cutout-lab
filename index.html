@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f4ee">
+  <title>去背實驗室｜看懂色鍵、遮罩與邊緣</title>
+  <meta name="description" content="用可互動的像素實驗比較綠幕、洋紅幕、藍幕去背。調整色差、alpha、邊界連通與去溢色，理解不同演算法適合什麼素材。">
+  <meta property="og:title" content="去背實驗室｜看懂色鍵、遮罩與邊緣">
+  <meta property="og:description" content="換一支幕色、切換算法、看髮絲和撞色細節怎麼變。所有試算都在你的瀏覽器完成。">
+  <meta property="og:type" content="website">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="去背實驗室首頁">
+      <span class="brand-mark" aria-hidden="true">α</span>
+      <span>去背實驗室</span>
+    </a>
+    <nav aria-label="主要導覽">
+      <a href="#lab">動手試</a>
+      <a href="#methods">看懂方法</a>
+      <a href="#choose">怎麼選</a>
+      <a href="#projects">專案實例</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="eyebrow-dot"></span> PIXEL PROCESSING FIELD GUIDE</p>
+        <h1>去背沒有<br><em>唯一的最佳算法。</em></h1>
+        <p class="hero-lead">背景是平綠幕、洋紅幕、藍幕，還是一張公園照片？素材條件不同，適合的去背方法也不同。這裡把像素攤開來，讓你調整參數、看見差異，再決定該用哪一種。</p>
+        <a class="button button-dark" href="#lab">開始像素實驗 <span aria-hidden="true">↓</span></a>
+      </div>
+      <div class="hero-art" aria-label="背景像素經過遮罩後，留下主體輪廓的示意圖">
+        <div class="hero-art-grid" aria-hidden="true"></div>
+        <div class="hero-pixel hero-pixel-one" aria-hidden="true"></div>
+        <div class="hero-pixel hero-pixel-two" aria-hidden="true"></div>
+        <div class="hero-pixel hero-pixel-three" aria-hidden="true"></div>
+        <div class="hero-cutout" aria-hidden="true">
+          <span class="cutout-head"></span>
+          <span class="cutout-hair"></span>
+          <span class="cutout-body"></span>
+          <span class="cutout-strand strand-one"></span>
+          <span class="cutout-strand strand-two"></span>
+        </div>
+        <div class="hero-art-label"><span>RGB</span><span class="label-arrow">→</span><span>RGBA</span></div>
+      </div>
+      <div class="hero-note"><span>01 /</span> 先看素材，再選方法</div>
+    </section>
+
+    <section class="lab-section section-pad" id="lab">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">01 — INTERACTIVE WORKBENCH</p>
+          <h2>同一張圖，換個算法看看</h2>
+        </div>
+        <p class="section-intro">選示範素材，或從裝置載入圖片。試算在本機瀏覽器執行，圖片不會上傳。</p>
+      </div>
+
+      <div class="workbench">
+        <div class="workbench-top">
+          <div class="sample-picker">
+            <span class="control-label">示範素材</span>
+            <div class="sample-buttons" role="group" aria-label="選擇示範素材">
+              <button class="sample-button is-active" type="button" data-sample="hair">綠幕・深色髮絲</button>
+              <button class="sample-button" type="button" data-sample="collision">綠幕・撞色配件</button>
+              <button class="sample-button" type="button" data-sample="busy">照片・複雜背景</button>
+            </div>
+          </div>
+          <label class="button button-light upload-button" for="image-upload">載入自己的圖片
+            <input id="image-upload" type="file" accept="image/png,image/jpeg,image/webp">
+          </label>
+        </div>
+
+        <div class="control-grid">
+          <fieldset class="control-card key-card">
+            <legend>幕色</legend>
+            <p class="control-help">幕色越不像主體本身，越容易乾淨分離。</p>
+            <div class="color-row" role="group" aria-label="常用幕色">
+              <button class="color-swatch is-selected" type="button" data-key="#00ff00" aria-label="綠幕 #00FF00" title="綠幕 #00FF00"><span class="swatch-green"></span><span>綠</span></button>
+              <button class="color-swatch" type="button" data-key="#ff00ff" aria-label="洋紅幕 #FF00FF" title="洋紅幕 #FF00FF"><span class="swatch-magenta"></span><span>洋紅</span></button>
+              <button class="color-swatch" type="button" data-key="#0000ff" aria-label="藍幕 #0000FF" title="藍幕 #0000FF"><span class="swatch-blue"></span><span>藍</span></button>
+              <label class="custom-color"><span>自訂</span><input id="key-color" type="color" value="#00ff00" aria-label="自訂幕色"></label>
+            </div>
+            <button class="text-button" id="sample-border" type="button">從圖片四角取樣幕色 ↗</button>
+          </fieldset>
+
+          <fieldset class="control-card method-card">
+            <legend>去背方法</legend>
+            <p class="control-help">每種方法都在同一份原圖上重新計算。</p>
+            <label class="select-wrap">
+              <span class="sr-only">選擇去背方法</span>
+              <select id="method">
+                <option value="distance">① RGB 色差門檻</option>
+                <option value="dominance" selected>② 通道優勢＋alpha 估算</option>
+                <option value="connected">③ 只清除連到邊界的幕色</option>
+              </select>
+              <span aria-hidden="true">⌄</span>
+            </label>
+            <p class="method-summary" id="method-summary">估算像素有多少比例被幕色覆蓋，讓半透明的細髮保留漸層。</p>
+          </fieldset>
+
+          <fieldset class="control-card slider-card">
+            <legend><label for="tolerance">幕色容差 <output id="tolerance-value">34</output></label></legend>
+            <p class="control-help" id="tolerance-help">調高會清掉更多接近幕色的像素，也可能吃掉撞色細節。</p>
+            <input id="tolerance" type="range" min="2" max="100" value="34">
+            <div class="range-ends"><span>保守</span><span>積極</span></div>
+          </fieldset>
+
+          <fieldset class="control-card result-card">
+            <legend><label for="preview-bg">結果檢查底色</label></legend>
+            <p class="control-help">透明邊緣的色汙，在不同底色上會更明顯。</p>
+            <label class="select-wrap">
+              <select id="preview-bg" aria-label="選擇結果檢查底色">
+                <option value="checker">棋盤格</option>
+                <option value="#ffffff">白色</option>
+                <option value="#202638">深色</option>
+                <option value="#ff00ff" selected>洋紅</option>
+                <option value="#00a8e8">亮藍</option>
+              </select>
+              <span aria-hidden="true">⌄</span>
+            </label>
+          </fieldset>
+        </div>
+
+        <div class="toggle-row">
+          <label class="toggle"><input id="despill" type="checkbox" checked><span class="toggle-ui"></span><span><strong>修正邊緣色汙</strong><small>只調整半透明邊緣，減少綠邊或洋紅邊</small></span></label>
+          <label class="toggle"><input id="erode" type="checkbox"><span class="toggle-ui"></span><span><strong>侵蝕一圈邊緣</strong><small>收掉外緣色圈；細髮、眼鏡腳也可能一起變細</small></span></label>
+          <p class="privacy-note"><span aria-hidden="true">⌂</span> 本機試算・不傳圖片</p>
+        </div>
+
+        <div class="canvas-grid">
+          <figure class="canvas-card">
+            <figcaption><span class="canvas-index">A</span><span><strong>原圖</strong><small id="source-caption">綠幕・深色髮絲</small></span></figcaption>
+            <div class="canvas-frame"><canvas id="source-canvas" width="560" height="360" aria-label="輸入原圖預覽"></canvas></div>
+          </figure>
+          <figure class="canvas-card">
+            <figcaption><span class="canvas-index">B</span><span><strong>alpha 遮罩</strong><small>白色保留・黑色透明・灰色半透明</small></span></figcaption>
+            <div class="canvas-frame mask-frame"><canvas id="matte-canvas" width="560" height="360" aria-label="透明度遮罩預覽"></canvas></div>
+          </figure>
+          <figure class="canvas-card">
+            <figcaption><span class="canvas-index">C</span><span><strong>去背結果</strong><small id="result-caption">疊在檢查底色上觀察</small></span></figcaption>
+            <div class="canvas-frame" id="result-frame"><canvas id="result-canvas" width="560" height="360" aria-label="去背後預覽"></canvas></div>
+          </figure>
+        </div>
+
+        <div class="readout-row">
+          <div class="readout">
+            <span class="readout-label">目前遮罩像素分布</span>
+            <div class="meter" aria-label="透明半透明不透明像素分布"><span id="meter-transparent"></span><span id="meter-partial"></span><span id="meter-opaque"></span></div>
+            <div class="meter-legend"><span><i class="legend-transparent"></i>透明 <b id="count-transparent">—</b></span><span><i class="legend-partial"></i>半透明 <b id="count-partial">—</b></span><span><i class="legend-opaque"></i>不透明 <b id="count-opaque">—</b></span></div>
+          </div>
+          <div class="live-insight" aria-live="polite"><span class="insight-icon" aria-hidden="true">↳</span><p id="live-insight">髮絲邊緣會混入綠幕色。試著關掉「修正邊緣色汙」，再切換檢查底色。</p></div>
+        </div>
+        <p class="demo-disclaimer">示範圖是為教學繪製的合成素材；算法用來說明色鍵的取捨，與每個專案的正式實作和參數不完全相同。</p>
+      </div>
+    </section>
+
+    <section class="methods-section section-pad" id="methods">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">02 — HOW THE PIXELS CHANGE</p>
+          <h2>去背其實在回答三個問題</h2>
+        </div>
+        <p class="section-intro">「這個像素像不像幕色？」「它是背景的一部分嗎？」「它有多少比例是主體？」不同算法回答問題的方式不同。</p>
+      </div>
+
+      <div class="method-cards">
+        <article class="method-explainer">
+          <div class="method-topline"><span class="method-number">01</span><span class="method-tag">顏色比較</span></div>
+          <h3>RGB 色差門檻</h3>
+          <p>計算像素和取樣幕色之間的 RGB 距離。距離小就透明，距離大就保留，中間可以加一段柔邊。</p>
+          <div class="equation-card small-equation"><strong>D = √((R−Rₖ)² + (G−Gₖ)² + (B−Bₖ)²)</strong><small>距離越小，越接近取樣幕色</small></div>
+          <div class="mini-diagram distance-diagram" aria-label="越接近幕色的像素越透明">
+            <span class="diagram-dot dot-key"></span><span class="diagram-line"></span><span class="diagram-dot dot-edge"></span><span class="diagram-line"></span><span class="diagram-dot dot-subject"></span>
+            <span class="diagram-caption">幕色</span><span class="diagram-caption">邊緣混色</span><span class="diagram-caption">主體</span>
+          </div>
+          <p class="method-tradeoff"><strong>優點</strong>簡單、快，適合均勻平底色。<strong>限制</strong>只要主體有近似顏色，也會一起被清除。</p>
+        </article>
+
+        <article class="method-explainer method-featured">
+          <div class="method-topline"><span class="method-number">02</span><span class="method-tag">估算覆蓋率</span></div>
+          <h3>通道優勢與 alpha</h3>
+          <p>不只看「像不像純綠」，而是看綠通道是否壓過紅、藍。再估算每個邊緣像素被幕色覆蓋的比例，保留半透明髮絲。</p>
+          <div class="equation-card"><span>觀察到的像素</span><strong>p = αF + (1 − α)K</strong><strong class="formula-secondary">α ≈ 1 − score(p) / score(K)</strong><small>F 主體　K 幕色　α 主體覆蓋率；需假設主體本身不偏幕色</small></div>
+          <p class="method-tradeoff"><strong>優點</strong>有機會還原細髮、羽毛和柔邊。<strong>限制</strong>幕色若和主體顏色重疊，單靠顏色仍無法分辨。</p>
+        </article>
+
+        <article class="method-explainer">
+          <div class="method-topline"><span class="method-number">03</span><span class="method-tag">看連通關係</span></div>
+          <h3>邊界 flood-fill</h3>
+          <p>先找出和幕色相近的像素，再從畫面邊界往內追蹤。只有連到外部背景的區域才會被清除；主體裡封閉的同色小物有機會留下。</p>
+          <div class="connectivity-diagram" aria-label="外側相連區域透明，主體內封閉區域保留">
+            <span class="connect-dot dot-edge-a"></span><span class="connect-dot dot-edge-b"></span><span class="connect-dot dot-inner"></span><span class="connect-outline"></span><span class="connect-path"></span>
+            <span class="connect-label">從外框開始找</span><span class="connect-label">內部封閉色塊保留</span>
+          </div>
+          <p class="method-tradeoff"><strong>優點</strong>保留和背景同色、但被主體包住的細節。<strong>限制</strong>輪廓有缺口時，背景可能從缺口灌進主體。</p>
+        </article>
+      </div>
+
+      <div class="formula-board">
+        <div class="formula-heading">
+          <div><p class="eyebrow">KEY COLOR IS A CHANNEL PATTERN</p><h3>幕色不同，通道判斷也不同</h3></div>
+          <p>色差法把 RGB 當成三維座標；通道優勢法則利用幕色最突出的通道組合。選一支幕色，看看它的判斷式。</p>
+        </div>
+        <div class="formula-grid">
+          <article class="formula-tile is-current" data-formula="green"><span class="formula-chip formula-green"></span><span class="formula-name">綠幕</span><strong>S = G − max(R, B)</strong><small>綠通道比紅、藍都高多少</small></article>
+          <article class="formula-tile" data-formula="magenta"><span class="formula-chip formula-magenta"></span><span class="formula-name">洋紅幕</span><strong>S = min(R, B) − G</strong><small>紅、藍兩通道都比綠高多少</small></article>
+          <article class="formula-tile" data-formula="blue"><span class="formula-chip formula-blue"></span><span class="formula-name">藍幕</span><strong>S = B − max(R, G)</strong><small>藍通道比紅、綠都高多少</small></article>
+        </div>
+        <p class="formula-note" id="formula-note">目前選擇綠幕。純綠分數高；非綠主體通常分數低。分數可用來估算邊緣混入多少幕色。</p>
+        <p class="formula-footnote">一般化做法是先找出幕色佔優的通道，再比較「最弱的幕色通道」與「最強的其他通道」。所以藍幕不能誤用洋紅幕的判斷式；在 cutout-skill 中，藍幕需要明確指定色碼。</p>
+      </div>
+
+      <div class="edge-notes">
+        <article>
+          <span class="edge-icon">↗</span>
+          <div><h3>邊緣色汙：despill</h3><p>抗鋸齒像素是主體和幕色混在一起的顏色。先算 alpha，再在半透明邊界修正幕色殘留；對整張圖改色，可能會洗掉主體本來就有的綠葉或紫色配件。</p></div>
+        </article>
+        <article>
+          <span class="edge-icon">↔</span>
+          <div><h3>縮放後還要再檢查</h3><p>透明像素裡仍存著原來的幕色。縮圖或放大時，如果直接混合 RGB，幕色會滲回輪廓。用 premultiplied alpha 重採樣，並在每次縮放後重新檢查邊緣。</p></div>
+        </article>
+        <article>
+          <span class="edge-icon">!</span>
+          <div><h3>撞色時，演算法沒有線索</h3><p>綠幕旁的綠葉、洋紅幕旁的紅披風，都可能和背景一起變透明。最可靠的修正通常是換一支不會出現在主體上的幕色，再從原圖重算。</p></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="choose-section section-pad" id="choose">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">03 — PICK THE RIGHT TOOL</p>
+          <h2>先看背景，再選去背方式</h2>
+        </div>
+        <p class="section-intro">把幕色當成拍攝或生圖規格的一部分。好素材能讓簡單、可預期的算法勝過複雜修補。</p>
+      </div>
+      <div class="decision-table" role="table" aria-label="素材條件與建議去背方法">
+        <div class="decision-row decision-header" role="row"><span role="columnheader">素材狀況</span><span role="columnheader">建議方法</span><span role="columnheader">要特別檢查</span></div>
+        <div class="decision-row" role="row"><span class="condition" role="cell"><i class="status-dot status-good"></i>平坦、單一且和主體分色的幕</span><span role="cell"><strong>色鍵 + alpha 邊緣 + despill</strong></span><span role="cell">四角是否透明；髮絲、鬍鬚、透明配件是否還在。</span></div>
+        <div class="decision-row" role="row"><span class="condition" role="cell"><i class="status-dot status-warn"></i>主體本身有幕色附近的顏色</span><span role="cell"><strong>先換幕色；必要時用局部遮罩</strong></span><span role="cell">有沒有整片衣物、葉子或配件被誤刪。</span></div>
+        <div class="decision-row" role="row"><span class="condition" role="cell"><i class="status-dot status-ai"></i>一般照片、漸層或複雜背景</span><span role="cell"><strong>主體分割或 AI 遮罩</strong></span><span role="cell">模型可能漏掉細髮；放大檢查並修邊。</span></div>
+        <div class="decision-row" role="row"><span class="condition" role="cell"><i class="status-dot status-stop"></i>黑、白、灰底，或背景和主體同色</span><span role="cell"><strong>色鍵不適用；改用遮罩或重新準備素材</strong></span><span role="cell">色鍵靠色度差辨認，沒有色度的灰階底很難安全分離。</span></div>
+      </div>
+      <p class="decision-footnote">綠、洋紅、藍沒有固定排名。選哪一色，取決於主體裡有哪些顏色、幕面夠不夠均勻，以及你的輸出用途。</p>
+    </section>
+
+    <section class="projects-section section-pad" id="projects">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">04 — FROM OUR REPOS</p>
+          <h2>這些做法來自實際專案</h2>
+        </div>
+        <p class="section-intro">網站用簡化案例教原理；正式工具會依素材、用途和失敗成本採用不同流程。</p>
+      </div>
+      <div class="project-grid">
+        <a class="project-card" href="https://github.com/yazelin/cutout-skill">
+          <span class="project-index">A / 精細素材</span><h3>cutout-skill</h3>
+          <p>給角色立繪、貼圖和道具用的平底色流程：綠／洋紅自動判幕，第三色明確指定，邊界連通、alpha 估算、邊帶 despill 和驗收。</p><span class="project-link">看腳本與實作筆記 <b>↗</b></span>
+        </a>
+        <a class="project-card" href="https://github.com/yazelin/line-sticker-studio">
+          <span class="project-index">B / 互動調整</span><h3>line-sticker-studio</h3>
+          <p>貼圖切格、色鍵去背和匯出流程。可以逐張調整去背參數，回到原圖重算，再檢查透明度和色邊。</p><span class="project-link">看貼圖工具 <b>↗</b></span>
+        </a>
+        <a class="project-card" href="https://github.com/yazelin/bye-bg">
+          <span class="project-index">C / 混合背景</span><h3>bye-bg</h3>
+          <p>遇到單色幕時走色鍵；遇到一般照片背景時走瀏覽器端 AI 遮罩。先判斷素材類型，再挑方法。</p><span class="project-link">看瀏覽器去背工具 <b>↗</b></span>
+        </a>
+        <a class="project-card" href="https://github.com/yazelin/ai-sticker-starter">
+          <span class="project-index">D / 入門教學</span><h3>ai-sticker-starter</h3>
+          <p>把一張綠幕九宮格做成貼圖包，並排比較顏色門檻與加上邊緣處理的差異。</p><span class="project-link">看貼圖管線教學 <b>↗</b></span>
+        </a>
+      </div>
+      <a class="related-article" href="https://yazelin.github.io/ai/2026/04/28/line-sticker-studio.html"><span>延伸閱讀</span><strong>LINE 貼圖製造機：為什麼用 chroma key，以及綠邊和 padding bar 怎麼處理</strong><b>↗</b></a>
+    </section>
+
+    <section class="closing-section">
+      <div class="closing-mark" aria-hidden="true">α</div>
+      <p class="eyebrow">A GOOD CUTOUT STARTS BEFORE THE CUT</p>
+      <h2>先挑對幕色，<br>再讓算法把邊緣做好。</h2>
+      <p>最好的去背流程，是能保住主體細節、符合輸出需求，而且每次重跑都能得到可預期結果的那一條。</p>
+      <a class="button button-dark" href="#lab">回到實驗桌 <span aria-hidden="true">↑</span></a>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true">α</span><span>去背實驗室</span></a>
+    <span>以像素、遮罩和實際專案經驗整理</span>
+    <a href="https://github.com/yazelin/cutout-lab">GitHub ↗</a>
+  </footer>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
