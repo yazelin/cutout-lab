@@ -41,6 +41,27 @@ const sampleDefinitions = {
     caption: '綠幕・撞色配件',
     insight: '胸前亮綠胸針和幕色相同；色鍵可能挖掉胸針，連通區域法則有機會保住封閉細節。'
   },
+  blue: {
+    image: 'assets/examples/blue-screen-warm-portrait.png',
+    key: '#0000ff',
+    keyFromCorners: true,
+    caption: '藍幕・暖色衣著與深色頭髮',
+    insight: '藍幕主要看 B 通道是否高過 R、G；暖色衣著和深髮提供對照，若主體含藍色也可能一起被去掉。'
+  },
+  cyan: {
+    image: 'assets/examples/cyan-screen-burgundy-portrait.png',
+    key: '#00ffff',
+    keyFromCorners: true,
+    caption: '青幕・酒紅衣著',
+    insight: '青幕同時看 G、B 是否高過 R；這是自訂幕色的例子，青綠或藍綠主體也可能和背景混在一起。'
+  },
+  yellow: {
+    image: 'assets/examples/yellow-screen-navy-portrait.png',
+    key: '#ffff00',
+    keyFromCorners: true,
+    caption: '黃幕・深色服裝',
+    insight: '黃幕同時看 R、G 是否高過 B；這是自訂幕色的例子，暖色膚色或黃色物件可能被誤當成背景。'
+  },
   busy: {
     image: 'assets/examples/park-portrait.png',
     key: '#00ff00',
@@ -52,42 +73,6 @@ const sampleDefinitions = {
     key: '#ff00ff',
     caption: '洋紅幕・站姿與長髮（B2-1）',
     insight: '長髮與花飾在洋紅背景前，適合觀察細線條、髮絲和半透明邊緣。'
-  },
-  pose2: {
-    image: 'assets/examples/byog-ref-B2-2.png',
-    key: '#ff00ff',
-    caption: '洋紅幕・坐姿（B2-2）',
-    insight: '坐姿的手腳和衣物靠近畫面下緣；檢查輪廓有沒有被容差或侵蝕吃掉。'
-  },
-  pose3: {
-    image: 'assets/examples/byog-ref-B2-3.png',
-    key: '#ff00ff',
-    caption: '洋紅幕・揮手與飄葉（B2-3）',
-    insight: '揮起的手、髮絲和飄落小葉彼此分離；看看細小綠色碎片是否被錯當成背景。'
-  },
-  pose4: {
-    image: 'assets/examples/byog-ref-B2-4.png',
-    key: '#ff00ff',
-    caption: '洋紅幕・思考姿勢（B2-4）',
-    insight: '手指和頭髮靠得很近；放大觀察這些相鄰輪廓是否因容差而黏在一起或被削掉。'
-  },
-  pose5: {
-    image: 'assets/examples/byog-ref-B2-5.png',
-    key: '#ff00ff',
-    caption: '洋紅幕・歡呼與飄葉（B2-5）',
-    insight: '雙手與衣袖抬高，外輪廓和零散葉片都能用來檢查遮罩是否完整。'
-  },
-  pose6: {
-    image: 'assets/examples/byog-ref-B2-6.png',
-    key: '#ff00ff',
-    caption: '洋紅幕・苦惱姿勢（B2-6）',
-    insight: '雙手靠近臉、頭髮和衣服；觀察調整容差與邊緣修色後，交界細節如何改變。'
-  },
-  pose7: {
-    image: 'assets/examples/byog-ref-B2-7.png',
-    key: '#ff00ff',
-    caption: '洋紅幕・全身小比例（B2-7）',
-    insight: '人物在畫面中較小；比較大面積洋紅背景能否清乾淨，同時保住完整的小輪廓。'
   }
 };
 

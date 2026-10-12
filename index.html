@@ -52,7 +52,7 @@
       <div class="workbench">
         <div class="workbench-top">
           <div class="sample-picker">
-            <span class="control-label">示範素材・綠幕、洋紅幕與一般照片</span>
+            <span class="control-label">示範素材・綠、洋紅、藍、青、黃幕與自然照片</span>
             <div class="sample-buttons" role="group" aria-label="選擇示範素材">
               <button class="sample-button is-active" type="button" data-sample="hair" aria-label="綠幕範例：深色髮絲" aria-pressed="true" title="綠幕・深色髮絲">
                 <img src="assets/examples/green-dark-hair-v2.png" alt="" loading="lazy"><span><b>A</b>髮絲</span>
@@ -60,29 +60,20 @@
               <button class="sample-button" type="button" data-sample="collision" aria-label="綠幕範例：撞色配件" aria-pressed="false" title="綠幕・撞色配件">
                 <img src="assets/examples/green-collision-brooch.png" alt="" loading="lazy"><span><b>B</b>撞色</span>
               </button>
+              <button class="sample-button" type="button" data-sample="blue" aria-label="藍幕範例：暖色衣著與深色頭髮" aria-pressed="false" title="藍幕・暖色衣著與深色頭髮">
+                <img src="assets/examples/blue-screen-warm-portrait.png" alt="" loading="lazy"><span><b>C</b>藍幕</span>
+              </button>
+              <button class="sample-button" type="button" data-sample="cyan" aria-label="青幕範例：酒紅衣著" aria-pressed="false" title="青幕・酒紅衣著">
+                <img src="assets/examples/cyan-screen-burgundy-portrait.png" alt="" loading="lazy"><span><b>D</b>青幕</span>
+              </button>
+              <button class="sample-button" type="button" data-sample="yellow" aria-label="黃幕範例：深色服裝" aria-pressed="false" title="黃幕・深色服裝">
+                <img src="assets/examples/yellow-screen-navy-portrait.png" alt="" loading="lazy"><span><b>E</b>黃幕</span>
+              </button>
               <button class="sample-button" type="button" data-sample="busy" aria-label="照片範例：自然背景不適用色鍵去背" aria-pressed="false" title="自然背景・不適用色鍵去背">
-                <img src="assets/examples/park-portrait.png" alt="" loading="lazy"><span><b>C</b>照片</span><small class="sample-warning">不適用色鍵</small>
+                <img src="assets/examples/park-portrait.png" alt="" loading="lazy"><span><b>F</b>照片</span><small class="sample-warning">不適用色鍵</small>
               </button>
-              <button class="sample-button" type="button" data-sample="pose1" aria-label="素材 1：站姿與長髮" aria-pressed="false" title="站姿・長髮與花飾">
-                <img src="assets/examples/byog-ref-B2-1.png" alt="" loading="lazy"><span><b>01</b>站姿</span>
-              </button>
-              <button class="sample-button" type="button" data-sample="pose2" aria-label="素材 2：坐姿" aria-pressed="false" title="坐姿">
-                <img src="assets/examples/byog-ref-B2-2.png" alt="" loading="lazy"><span><b>02</b>坐姿</span>
-              </button>
-              <button class="sample-button" type="button" data-sample="pose3" aria-label="素材 3：揮手與飄葉" aria-pressed="false" title="揮手與飄葉">
-                <img src="assets/examples/byog-ref-B2-3.png" alt="" loading="lazy"><span><b>03</b>揮手</span>
-              </button>
-              <button class="sample-button" type="button" data-sample="pose4" aria-label="素材 4：思考姿勢" aria-pressed="false" title="思考姿勢">
-                <img src="assets/examples/byog-ref-B2-4.png" alt="" loading="lazy"><span><b>04</b>思考</span>
-              </button>
-              <button class="sample-button" type="button" data-sample="pose5" aria-label="素材 5：歡呼與飄葉" aria-pressed="false" title="歡呼與飄葉">
-                <img src="assets/examples/byog-ref-B2-5.png" alt="" loading="lazy"><span><b>05</b>歡呼</span>
-              </button>
-              <button class="sample-button" type="button" data-sample="pose6" aria-label="素材 6：苦惱姿勢" aria-pressed="false" title="苦惱姿勢">
-                <img src="assets/examples/byog-ref-B2-6.png" alt="" loading="lazy"><span><b>06</b>苦惱</span>
-              </button>
-              <button class="sample-button" type="button" data-sample="pose7" aria-label="素材 7：全身小比例" aria-pressed="false" title="全身小比例">
-                <img src="assets/examples/byog-ref-B2-7.png" alt="" loading="lazy"><span><b>07</b>全身</span>
+              <button class="sample-button" type="button" data-sample="pose1" aria-label="洋紅幕範例：B2 站姿與長髮參考圖" aria-pressed="false" title="洋紅幕・B2 站姿與長髮">
+                <img src="assets/examples/byog-ref-B2-1.png" alt="" loading="lazy"><span><b>G</b>洋紅幕</span>
               </button>
             </div>
           </div>
@@ -171,7 +162,7 @@
           </div>
           <div class="live-insight" aria-live="polite"><span class="insight-icon" aria-hidden="true">↳</span><p id="live-insight">深色長髮和細髮絲落在綠幕前，適合比較邊緣 alpha 與去色汙。</p></div>
         </div>
-        <p class="demo-disclaimer">範例包含三張 AI 生成的綠幕與自然照片，以及七張提供的 B2 洋紅幕參考圖。這些素材用來觀察算法取捨，不代表各專案正式實作和參數完全相同。</p>
+        <p class="demo-disclaimer">範例包含六張 AI 生成素材（綠幕、藍幕、青幕、黃幕與自然背景照片）及一張 B2 洋紅幕參考圖。幕色範例用來觀察通道組合和素材撞色的取捨；自然照片則示範色鍵不適用的情況。示範素材不代表各專案正式實作和參數完全相同。</p>
       </div>
     </section>
 
