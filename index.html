@@ -33,19 +33,9 @@
         <p class="hero-lead">背景是平綠幕、洋紅幕、藍幕，還是一張公園照片？素材條件不同，適合的去背方法也不同。這裡把像素攤開來，讓你調整參數、看見差異，再決定該用哪一種。</p>
         <a class="button button-dark" href="#lab">開始像素實驗 <span aria-hidden="true">↓</span></a>
       </div>
-      <div class="hero-art" aria-label="背景像素經過遮罩後，留下主體輪廓的示意圖">
-        <div class="hero-art-grid" aria-hidden="true"></div>
-        <div class="hero-pixel hero-pixel-one" aria-hidden="true"></div>
-        <div class="hero-pixel hero-pixel-two" aria-hidden="true"></div>
-        <div class="hero-pixel hero-pixel-three" aria-hidden="true"></div>
-        <div class="hero-cutout" aria-hidden="true">
-          <span class="cutout-head"></span>
-          <span class="cutout-hair"></span>
-          <span class="cutout-body"></span>
-          <span class="cutout-strand strand-one"></span>
-          <span class="cutout-strand strand-two"></span>
-        </div>
-        <div class="hero-art-label"><span>RGB</span><span class="label-arrow">→</span><span>RGBA</span></div>
+      <div class="hero-art">
+        <img class="hero-sample" src="assets/examples/byog-ref-B2-5.png" alt="洋紅幕上的歡呼姿勢範例圖">
+        <div class="hero-art-label"><strong>洋紅幕</strong><span>RGB #FF00FF</span></div>
       </div>
       <div class="hero-note"><span>01 /</span> 先看素材，再選方法</div>
     </section>
@@ -62,11 +52,29 @@
       <div class="workbench">
         <div class="workbench-top">
           <div class="sample-picker">
-            <span class="control-label">示範素材</span>
+            <span class="control-label">洋紅幕素材・B2 參考組</span>
             <div class="sample-buttons" role="group" aria-label="選擇示範素材">
-              <button class="sample-button is-active" type="button" data-sample="hair">綠幕・深色髮絲</button>
-              <button class="sample-button" type="button" data-sample="collision">綠幕・撞色配件</button>
-              <button class="sample-button" type="button" data-sample="busy">照片・複雜背景</button>
+              <button class="sample-button is-active" type="button" data-sample="pose1" aria-label="素材 1：站姿與長髮" aria-pressed="true" title="站姿・長髮與花飾">
+                <img src="assets/examples/byog-ref-B2-1.png" alt="" loading="lazy"><span><b>01</b>站姿</span>
+              </button>
+              <button class="sample-button" type="button" data-sample="pose2" aria-label="素材 2：坐姿" aria-pressed="false" title="坐姿">
+                <img src="assets/examples/byog-ref-B2-2.png" alt="" loading="lazy"><span><b>02</b>坐姿</span>
+              </button>
+              <button class="sample-button" type="button" data-sample="pose3" aria-label="素材 3：揮手與飄葉" aria-pressed="false" title="揮手與飄葉">
+                <img src="assets/examples/byog-ref-B2-3.png" alt="" loading="lazy"><span><b>03</b>揮手</span>
+              </button>
+              <button class="sample-button" type="button" data-sample="pose4" aria-label="素材 4：思考姿勢" aria-pressed="false" title="思考姿勢">
+                <img src="assets/examples/byog-ref-B2-4.png" alt="" loading="lazy"><span><b>04</b>思考</span>
+              </button>
+              <button class="sample-button" type="button" data-sample="pose5" aria-label="素材 5：歡呼與飄葉" aria-pressed="false" title="歡呼與飄葉">
+                <img src="assets/examples/byog-ref-B2-5.png" alt="" loading="lazy"><span><b>05</b>歡呼</span>
+              </button>
+              <button class="sample-button" type="button" data-sample="pose6" aria-label="素材 6：苦惱姿勢" aria-pressed="false" title="苦惱姿勢">
+                <img src="assets/examples/byog-ref-B2-6.png" alt="" loading="lazy"><span><b>06</b>苦惱</span>
+              </button>
+              <button class="sample-button" type="button" data-sample="pose7" aria-label="素材 7：全身小比例" aria-pressed="false" title="全身小比例">
+                <img src="assets/examples/byog-ref-B2-7.png" alt="" loading="lazy"><span><b>07</b>全身</span>
+              </button>
             </div>
           </div>
           <label class="button button-light upload-button" for="image-upload">載入自己的圖片
@@ -79,10 +87,10 @@
             <legend>幕色</legend>
             <p class="control-help">幕色越不像主體本身，越容易乾淨分離。</p>
             <div class="color-row" role="group" aria-label="常用幕色">
-              <button class="color-swatch is-selected" type="button" data-key="#00ff00" aria-label="綠幕 #00FF00" title="綠幕 #00FF00"><span class="swatch-green"></span><span>綠</span></button>
-              <button class="color-swatch" type="button" data-key="#ff00ff" aria-label="洋紅幕 #FF00FF" title="洋紅幕 #FF00FF"><span class="swatch-magenta"></span><span>洋紅</span></button>
+              <button class="color-swatch" type="button" data-key="#00ff00" aria-label="綠幕 #00FF00" title="綠幕 #00FF00"><span class="swatch-green"></span><span>綠</span></button>
+              <button class="color-swatch is-selected" type="button" data-key="#ff00ff" aria-label="洋紅幕 #FF00FF" title="洋紅幕 #FF00FF"><span class="swatch-magenta"></span><span>洋紅</span></button>
               <button class="color-swatch" type="button" data-key="#0000ff" aria-label="藍幕 #0000FF" title="藍幕 #0000FF"><span class="swatch-blue"></span><span>藍</span></button>
-              <label class="custom-color"><span>自訂</span><input id="key-color" type="color" value="#00ff00" aria-label="自訂幕色"></label>
+              <label class="custom-color"><span>自訂</span><input id="key-color" type="color" value="#ff00ff" aria-label="自訂幕色"></label>
             </div>
             <button class="text-button" id="sample-border" type="button">從圖片四角取樣幕色 ↗</button>
           </fieldset>
@@ -114,10 +122,10 @@
             <p class="control-help">透明邊緣的色汙，在不同底色上會更明顯。</p>
             <label class="select-wrap">
               <select id="preview-bg" aria-label="選擇結果檢查底色">
-                <option value="checker">棋盤格</option>
+                <option value="checker" selected>棋盤格</option>
                 <option value="#ffffff">白色</option>
                 <option value="#202638">深色</option>
-                <option value="#ff00ff" selected>洋紅</option>
+                <option value="#ff00ff">洋紅</option>
                 <option value="#00a8e8">亮藍</option>
               </select>
               <span aria-hidden="true">⌄</span>
@@ -133,16 +141,16 @@
 
         <div class="canvas-grid">
           <figure class="canvas-card">
-            <figcaption><span class="canvas-index">A</span><span><strong>原圖</strong><small id="source-caption">綠幕・深色髮絲</small></span></figcaption>
-            <div class="canvas-frame"><canvas id="source-canvas" width="560" height="360" aria-label="輸入原圖預覽"></canvas></div>
+            <figcaption><span class="canvas-index">A</span><span><strong>原圖</strong><small id="source-caption">洋紅幕・站姿與長髮（B2-1）</small></span></figcaption>
+            <div class="canvas-frame"><canvas id="source-canvas" width="256" height="256" aria-label="輸入原圖預覽"></canvas></div>
           </figure>
           <figure class="canvas-card">
             <figcaption><span class="canvas-index">B</span><span><strong>alpha 遮罩</strong><small>白色保留・黑色透明・灰色半透明</small></span></figcaption>
-            <div class="canvas-frame mask-frame"><canvas id="matte-canvas" width="560" height="360" aria-label="透明度遮罩預覽"></canvas></div>
+            <div class="canvas-frame mask-frame"><canvas id="matte-canvas" width="256" height="256" aria-label="透明度遮罩預覽"></canvas></div>
           </figure>
           <figure class="canvas-card">
             <figcaption><span class="canvas-index">C</span><span><strong>去背結果</strong><small id="result-caption">疊在檢查底色上觀察</small></span></figcaption>
-            <div class="canvas-frame" id="result-frame"><canvas id="result-canvas" width="560" height="360" aria-label="去背後預覽"></canvas></div>
+            <div class="canvas-frame checker-bg" id="result-frame"><canvas id="result-canvas" width="256" height="256" aria-label="去背後預覽"></canvas></div>
           </figure>
         </div>
 
@@ -152,9 +160,9 @@
             <div class="meter" aria-label="透明半透明不透明像素分布"><span id="meter-transparent"></span><span id="meter-partial"></span><span id="meter-opaque"></span></div>
             <div class="meter-legend"><span><i class="legend-transparent"></i>透明 <b id="count-transparent">—</b></span><span><i class="legend-partial"></i>半透明 <b id="count-partial">—</b></span><span><i class="legend-opaque"></i>不透明 <b id="count-opaque">—</b></span></div>
           </div>
-          <div class="live-insight" aria-live="polite"><span class="insight-icon" aria-hidden="true">↳</span><p id="live-insight">髮絲邊緣會混入綠幕色。試著關掉「修正邊緣色汙」，再切換檢查底色。</p></div>
+          <div class="live-insight" aria-live="polite"><span class="insight-icon" aria-hidden="true">↳</span><p id="live-insight">長髮與花飾在洋紅背景前，適合觀察細線條、髮絲和半透明邊緣。</p></div>
         </div>
-        <p class="demo-disclaimer">示範圖是為教學繪製的合成素材；算法用來說明色鍵的取捨，與每個專案的正式實作和參數不完全相同。</p>
+        <p class="demo-disclaimer">範例改用提供的 B2 洋紅幕素材。這組圖適合觀察色鍵與邊緣處理；它呈現的是像素算法示範，不代表各專案正式實作和參數完全相同。</p>
       </div>
     </section>
 

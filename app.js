@@ -21,14 +21,47 @@ const formulaNotes = {
   custom: '目前是自訂幕色。演算法依幕色的高通道組合計分；黑、白、灰缺少色度差，無法安全用色鍵分離。'
 };
 
-let currentSample = 'hair';
+let currentSample = 'pose1';
 let sourceIsUpload = false;
 let pendingFrame = 0;
+let sampleLoadSequence = 0;
 
-const sampleNames = {
-  hair: '綠幕・深色髮絲',
-  collision: '綠幕・撞色配件',
-  busy: '照片・複雜背景'
+const sampleDefinitions = {
+  pose1: {
+    image: 'assets/examples/byog-ref-B2-1.png',
+    caption: '洋紅幕・站姿與長髮（B2-1）',
+    insight: '長髮與花飾在洋紅背景前，適合觀察細線條、髮絲和半透明邊緣。'
+  },
+  pose2: {
+    image: 'assets/examples/byog-ref-B2-2.png',
+    caption: '洋紅幕・坐姿（B2-2）',
+    insight: '坐姿的手腳和衣物靠近畫面下緣；檢查輪廓有沒有被容差或侵蝕吃掉。'
+  },
+  pose3: {
+    image: 'assets/examples/byog-ref-B2-3.png',
+    caption: '洋紅幕・揮手與飄葉（B2-3）',
+    insight: '揮起的手、髮絲和飄落小葉彼此分離；看看細小綠色碎片是否被錯當成背景。'
+  },
+  pose4: {
+    image: 'assets/examples/byog-ref-B2-4.png',
+    caption: '洋紅幕・思考姿勢（B2-4）',
+    insight: '手指和頭髮靠得很近；放大觀察這些相鄰輪廓是否因容差而黏在一起或被削掉。'
+  },
+  pose5: {
+    image: 'assets/examples/byog-ref-B2-5.png',
+    caption: '洋紅幕・歡呼與飄葉（B2-5）',
+    insight: '雙手與衣袖抬高，外輪廓和零散葉片都能用來檢查遮罩是否完整。'
+  },
+  pose6: {
+    image: 'assets/examples/byog-ref-B2-6.png',
+    caption: '洋紅幕・苦惱姿勢（B2-6）',
+    insight: '雙手靠近臉、頭髮和衣服；觀察調整容差與邊緣修色後，交界細節如何改變。'
+  },
+  pose7: {
+    image: 'assets/examples/byog-ref-B2-7.png',
+    caption: '洋紅幕・全身小比例（B2-7）',
+    insight: '人物在畫面中較小；比較大面積洋紅背景能否清乾淨，同時保住完整的小輪廓。'
+  }
 };
 
 function hexToRgb(hex) {
@@ -57,138 +90,35 @@ function setCanvasDimensions(width, height) {
 }
 
 function drawSample(kind, keyHex) {
+  const sample = sampleDefinitions[kind];
+  if (!sample) return;
+
+  const sequence = ++sampleLoadSequence;
   sourceIsUpload = false;
   currentSample = kind;
-  const width = 560;
-  const height = 360;
-  setCanvasDimensions(width, height);
-
-  const detailCanvas = document.createElement('canvas');
-  detailCanvas.width = width * 2;
-  detailCanvas.height = height * 2;
-  const ctx = detailCanvas.getContext('2d');
-  ctx.scale(2, 2);
-
-  if (kind === 'busy') {
-    const sky = ctx.createLinearGradient(0, 0, 560, 360);
-    sky.addColorStop(0, '#d8dfd7');
-    sky.addColorStop(.48, '#a3b7a4');
-    sky.addColorStop(1, '#667d73');
-    ctx.fillStyle = sky;
-    ctx.fillRect(0, 0, 560, 360);
-    ctx.fillStyle = 'rgba(252, 228, 168, .65)';
-    [[62, 70, 36], [464, 57, 54], [404, 213, 43], [93, 275, 62], [520, 315, 39]].forEach(function (dot) {
-      ctx.beginPath(); ctx.arc(dot[0], dot[1], dot[2], 0, Math.PI * 2); ctx.fill();
+  const image = new Image();
+  image.onload = function () {
+    if (sequence !== sampleLoadSequence) return;
+    const width = image.naturalWidth || image.width;
+    const height = image.naturalHeight || image.height;
+    setCanvasDimensions(width, height);
+    const output = sourceCanvas.getContext('2d', { willReadFrequently: true });
+    output.clearRect(0, 0, width, height);
+    output.drawImage(image, 0, 0, width, height);
+    sampleCaption.textContent = sample.caption;
+    updateKeyFormula(keyHex);
+    document.querySelectorAll('.sample-button').forEach(function (button) {
+      const selected = button.dataset.sample === kind;
+      button.classList.toggle('is-active', selected);
+      button.setAttribute('aria-pressed', selected ? 'true' : 'false');
     });
-    ctx.fillStyle = 'rgba(37, 67, 52, .35)';
-    ctx.beginPath(); ctx.moveTo(0, 250); ctx.quadraticCurveTo(130, 180, 235, 250); ctx.lineTo(270, 360); ctx.lineTo(0, 360); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(410, 208); ctx.quadraticCurveTo(500, 160, 560, 229); ctx.lineTo(560, 360); ctx.lineTo(410, 360); ctx.fill();
-  } else {
-    ctx.fillStyle = keyHex;
-    ctx.fillRect(0, 0, 560, 360);
-  }
-
-  drawPortrait(ctx, kind === 'collision', keyHex);
-
-  const output = sourceCanvas.getContext('2d', { willReadFrequently: true });
-  output.clearRect(0, 0, width, height);
-  output.imageSmoothingEnabled = true;
-  output.drawImage(detailCanvas, 0, 0, width, height);
-  sampleCaption.textContent = sampleNames[kind];
-  updateKeyFormula(keyHex);
-  document.querySelectorAll('.sample-button').forEach(function (button) {
-    button.classList.toggle('is-active', button.dataset.sample === kind);
-  });
-  scheduleProcess();
-}
-
-function drawPortrait(ctx, hasCollision, keyHex) {
-  ctx.save();
-  ctx.fillStyle = 'rgba(28, 42, 39, .12)';
-  ctx.beginPath(); ctx.ellipse(280, 350, 150, 25, 0, 0, Math.PI * 2); ctx.fill();
-
-  // 肩膀與衣服
-  ctx.fillStyle = '#789487';
-  ctx.beginPath();
-  ctx.moveTo(155, 360); ctx.quadraticCurveTo(169, 284, 222, 267);
-  ctx.lineTo(252, 253); ctx.lineTo(315, 253); ctx.lineTo(345, 267);
-  ctx.quadraticCurveTo(403, 286, 418, 360); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = '#f0d7b6';
-  ctx.beginPath(); ctx.moveTo(241, 257); ctx.lineTo(320, 257); ctx.lineTo(306, 312); ctx.quadraticCurveTo(280, 328, 254, 310); ctx.closePath(); ctx.fill();
-
-  // 背髮、耳朵與臉
-  ctx.fillStyle = '#28272d';
-  ctx.beginPath();
-  ctx.moveTo(189, 163); ctx.quadraticCurveTo(178, 46, 271, 39);
-  ctx.quadraticCurveTo(375, 27, 375, 156); ctx.lineTo(364, 252);
-  ctx.quadraticCurveTo(348, 304, 327, 284); ctx.lineTo(315, 194);
-  ctx.lineTo(225, 206); ctx.lineTo(218, 286); ctx.quadraticCurveTo(190, 279, 184, 235); ctx.closePath(); ctx.fill();
-
-  ctx.fillStyle = '#cf8d70';
-  ctx.beginPath(); ctx.ellipse(202, 178, 18, 27, -.1, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(352, 178, 18, 27, .1, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#e8ad88';
-  ctx.beginPath(); ctx.ellipse(278, 164, 75, 96, 0, 0, Math.PI * 2); ctx.fill();
-
-  // 瀏海與側邊碎髮
-  ctx.fillStyle = '#28272d';
-  ctx.beginPath();
-  ctx.moveTo(205, 150); ctx.quadraticCurveTo(187, 47, 278, 42);
-  ctx.quadraticCurveTo(368, 38, 358, 144);
-  ctx.quadraticCurveTo(326, 128, 308, 97);
-  ctx.quadraticCurveTo(288, 135, 267, 144);
-  ctx.quadraticCurveTo(250, 122, 239, 99);
-  ctx.quadraticCurveTo(226, 137, 205, 150); ctx.fill();
-  ctx.beginPath(); ctx.moveTo(197, 137); ctx.quadraticCurveTo(183, 209, 205, 266); ctx.lineTo(222, 253); ctx.lineTo(220, 150); ctx.fill();
-  ctx.beginPath(); ctx.moveTo(348, 139); ctx.quadraticCurveTo(373, 203, 349, 273); ctx.lineTo(331, 257); ctx.lineTo(335, 155); ctx.fill();
-
-  // 面部細節
-  ctx.strokeStyle = '#713f3e'; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
-  ctx.beginPath(); ctx.moveTo(245, 177); ctx.quadraticCurveTo(254, 171, 262, 177); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(297, 177); ctx.quadraticCurveTo(306, 171, 314, 177); ctx.stroke();
-  ctx.fillStyle = '#372f36';
-  ctx.beginPath(); ctx.ellipse(254, 181, 3.4, 4.5, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(305, 181, 3.4, 4.5, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.strokeStyle = '#b76062'; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(269, 211); ctx.quadraticCurveTo(280, 219, 292, 210); ctx.stroke();
-  ctx.fillStyle = 'rgba(213, 107, 111, .28)';
-  ctx.beginPath(); ctx.ellipse(235, 207, 15, 7, -.2, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(322, 207, 15, 7, .2, 0, Math.PI * 2); ctx.fill();
-
-  // 深髮上帶幕色的柔邊，模擬攝影或生圖時的色彩溢出
-  ctx.save();
-  ctx.globalAlpha = .26;
-  ctx.strokeStyle = keyHex;
-  ctx.lineWidth = 7;
-  ctx.lineCap = 'round';
-  ctx.beginPath(); ctx.moveTo(197, 142); ctx.quadraticCurveTo(177, 210, 204, 268); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(348, 142); ctx.quadraticCurveTo(379, 207, 350, 274); ctx.stroke();
-  ctx.restore();
-
-  // 幾根混入背景色的細髮
-  ctx.save();
-  ctx.strokeStyle = '#27262b'; ctx.lineWidth = 1.6; ctx.lineCap = 'round'; ctx.globalAlpha = .58;
-  [[192, 120, 169, 174], [197, 148, 177, 207], [358, 121, 378, 174], [355, 150, 378, 219], [211, 110, 192, 154]].forEach(function (line, index) {
-    ctx.beginPath();
-    ctx.moveTo(line[0], line[1]);
-    ctx.quadraticCurveTo(line[2] - (index % 2 ? 4 : -4), line[3] - 20, line[2], line[3]);
-    ctx.stroke();
-  });
-  ctx.restore();
-
-  // 領口小飾品。第二個素材讓裝飾和綠幕撞色，示範顏色法會誤刪、連通法可能保留。
-  ctx.fillStyle = '#e0c886';
-  ctx.beginPath(); ctx.arc(281, 300, 17, 0, Math.PI * 2); ctx.fill();
-  if (hasCollision) {
-    ctx.fillStyle = '#00ea40';
-    ctx.beginPath(); ctx.ellipse(281, 300, 8, 13, .4, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = '#4f6545'; ctx.lineWidth = 1.2;
-    ctx.beginPath(); ctx.moveTo(273, 305); ctx.lineTo(289, 295); ctx.stroke();
-  } else {
-    ctx.fillStyle = '#d47872';
-    ctx.beginPath(); ctx.arc(281, 300, 7, 0, Math.PI * 2); ctx.fill();
-  }
-  ctx.restore();
+    scheduleProcess();
+  };
+  image.onerror = function () {
+    if (sequence !== sampleLoadSequence) return;
+    liveInsight.textContent = '範例圖片無法載入，請重新整理頁面或改載入自己的圖片。';
+  };
+  image.src = sample.image;
 }
 
 function scheduleProcess() {
@@ -448,21 +378,17 @@ function updateMethodCopy() {
 function updateInsight() {
   const mode = methodSelect.value;
   const spillOn = document.getElementById('despill').checked;
-  let text = '';
-  if (currentSample === 'busy') {
-    text = '這張背景有漸層和紋理。色鍵只認顏色，可能把背景留下或挖掉相近色；這種素材通常改用主體分割或 AI 遮罩，再人工檢查髮絲。';
-  } else if (currentSample === 'collision' && mode !== 'connected') {
-    text = '領口的綠色飾品和幕色接近，所以顏色算法可能把它一起清掉。切換邊界連通法，比較「顏色相同」和「背景相連」的差別。';
-  } else if (currentSample === 'collision') {
-    text = '封閉在衣服上的綠色飾品現在能留下來。若輪廓有缺口，外部幕色可能穿過缺口連進去，仍要放大檢查。';
-  } else if (mode === 'distance') {
-    text = spillOn
-      ? '色差門檻會把綠幕和主體的混色轉成半透明。邊緣修色已開啟；試著提高容差，觀察細髮與輪廓怎麼改變。'
-      : '已關閉邊緣修色。把結果疊在洋紅或深色底上，注意半透明輪廓是否還帶著綠色。';
-  } else if (mode === 'dominance') {
-    text = '通道優勢估算每個邊緣像素的幕色比例。半透明細髮有機會留下；幕色和主體撞色時，比例估算仍可能誤判。';
-  } else {
-    text = '演算法只從畫面外框追蹤幕色。它能保住封閉的同色區域，但也更依賴完整輪廓與乾淨的取樣容差。';
+  const sample = sampleDefinitions[currentSample];
+  const methodNotes = {
+    distance: '色差法按 RGB 距離清除洋紅像素；調高容差，觀察外輪廓和綠色配件的變化。',
+    dominance: '通道優勢法估算幕色覆蓋比例；比較髮絲周圍的半透明像素，以及綠色主體細節。',
+    connected: '邊界連通法只清除連到畫面邊界的洋紅區；封閉在主體裡的洋紅色仍可能留下。'
+  };
+  let text = (sample ? sample.insight : '') + ' ' + methodNotes[mode];
+  if (spillOn && mode !== 'connected') {
+    text += '邊緣修色已開啟。';
+  } else if (!spillOn && mode !== 'connected') {
+    text += '邊緣修色目前關閉。';
   }
   liveInsight.textContent = text;
 }
@@ -516,9 +442,11 @@ function sampleCorners() {
 
 function loadImage(file) {
   if (!file) return;
+  const sequence = ++sampleLoadSequence;
   const url = URL.createObjectURL(file);
   const image = new Image();
   image.onload = function () {
+    if (sequence !== sampleLoadSequence) { URL.revokeObjectURL(url); return; }
     const scale = Math.min(1, 900 / image.width, 700 / image.height);
     const width = Math.max(1, Math.round(image.width * scale));
     const height = Math.max(1, Math.round(image.height * scale));
@@ -528,7 +456,10 @@ function loadImage(file) {
     context.drawImage(image, 0, 0, width, height);
     sourceIsUpload = true;
     sampleCaption.textContent = file.name + '（縮放預覽）';
-    document.querySelectorAll('.sample-button').forEach(function (button) { button.classList.remove('is-active'); });
+    document.querySelectorAll('.sample-button').forEach(function (button) {
+      button.classList.remove('is-active');
+      button.setAttribute('aria-pressed', 'false');
+    });
     URL.revokeObjectURL(url);
     scheduleProcess();
   };
@@ -559,4 +490,4 @@ document.getElementById('erode').addEventListener('change', scheduleProcess);
 document.getElementById('sample-border').addEventListener('click', sampleCorners);
 uploadInput.addEventListener('change', function (event) { loadImage(event.target.files[0]); });
 
-drawSample('hair', keyInput.value);
+drawSample('pose1', keyInput.value);
