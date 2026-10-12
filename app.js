@@ -11,6 +11,7 @@ const previewSelect = document.getElementById('preview-bg');
 const resultFrame = document.getElementById('result-frame');
 const uploadInput = document.getElementById('image-upload');
 const sampleCaption = document.getElementById('source-caption');
+const resultCaption = document.getElementById('result-caption');
 const methodSummary = document.getElementById('method-summary');
 const liveInsight = document.getElementById('live-insight');
 const imageSize = { width: 560, height: 360 };
@@ -25,6 +26,9 @@ let currentSample = 'hair';
 let sourceIsUpload = false;
 let pendingFrame = 0;
 let sampleLoadSequence = 0;
+let modelRuntimePromise = null;
+let modelSessionPromise = null;
+let processSequence = 0;
 
 const sampleDefinitions = {
   hair: {
@@ -66,7 +70,7 @@ const sampleDefinitions = {
     image: 'assets/examples/park-portrait.webp',
     key: '#00ff00',
     caption: '照片・複雜背景',
-    insight: '這張自然照片不適合 chroma key（色鍵）去背，因為背景沒有單一、均勻的幕色。這個範例刻意展示色鍵在複雜背景下的限制：背景會殘留，與幕色相近的樹葉或衣物也可能被誤刪。'
+    insight: '這張公園照片沒有單一幕色。色鍵會留下樹木和光影背景；切換 U2Net-p 模型遮罩可看模型如何從一般照片預測主體。'
   },
   pose1: {
     image: 'assets/examples/byog-ref-B2-1.png',
@@ -144,6 +148,145 @@ function scheduleProcess() {
   });
 }
 
+const ORT_CDN = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.27.0/dist/';
+const U2NET_MODEL_URLS = [
+  'https://cdn.jsdelivr.net/gh/yazelin/bye-bg@main/model/u2netp.onnx',
+  'https://raw.githubusercontent.com/yazelin/bye-bg/main/model/u2netp.onnx'
+];
+const MODEL_SIZE = 320;
+const MODEL_MEAN = [0.485, 0.456, 0.406];
+const MODEL_STD = [0.229, 0.224, 0.225];
+
+function loadScript(src) {
+  return new Promise(function (resolve, reject) {
+    const script = document.createElement('script');
+    script.src = src;
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+}
+
+function ensureModelRuntime() {
+  if (window.ort) {
+    window.ort.env.wasm.wasmPaths = ORT_CDN;
+    window.ort.env.wasm.numThreads = 1;
+    return Promise.resolve();
+  }
+  if (!modelRuntimePromise) {
+    modelRuntimePromise = loadScript(ORT_CDN + 'ort.min.js').then(function () {
+      window.ort.env.wasm.wasmPaths = ORT_CDN;
+      window.ort.env.wasm.numThreads = 1;
+    }).catch(function () {
+      modelRuntimePromise = null;
+      throw new Error('ONNX Runtime Web 載入失敗，請確認網路連線後重試。');
+    });
+  }
+  return modelRuntimePromise;
+}
+
+async function fetchU2NetModel() {
+  let lastError = null;
+  for (const url of U2NET_MODEL_URLS) {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      return new Uint8Array(await response.arrayBuffer());
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw new Error('U2Net-p 模型下載失敗' + (lastError ? '：' + lastError.message : '。'));
+}
+
+function ensureModelSession() {
+  if (!modelSessionPromise) {
+    modelSessionPromise = (async function () {
+      await ensureModelRuntime();
+      const model = await fetchU2NetModel();
+      return window.ort.InferenceSession.create(model, { executionProviders: ['wasm'] });
+    })();
+    modelSessionPromise.catch(function () { modelSessionPromise = null; });
+  }
+  return modelSessionPromise;
+}
+
+async function processWithU2Net(original, width, height, sequence) {
+  liveInsight.textContent = '首次使用會載入約 4.6 MB 的 U2Net-p 模型；圖片留在瀏覽器本機處理。';
+  resultCaption.textContent = 'U2Net-p 模型遮罩載入中';
+  try {
+    const session = await ensureModelSession();
+    if (sequence !== processSequence) return;
+
+    liveInsight.textContent = 'U2Net-p 正在分析主體與背景…';
+    const inputCanvas = document.createElement('canvas');
+    inputCanvas.width = MODEL_SIZE;
+    inputCanvas.height = MODEL_SIZE;
+    const inputContext = inputCanvas.getContext('2d', { willReadFrequently: true });
+    inputContext.drawImage(sourceCanvas, 0, 0, MODEL_SIZE, MODEL_SIZE);
+    const pixels = inputContext.getImageData(0, 0, MODEL_SIZE, MODEL_SIZE).data;
+    const input = new Float32Array(3 * MODEL_SIZE * MODEL_SIZE);
+    for (let i = 0; i < MODEL_SIZE * MODEL_SIZE; i++) {
+      for (let channel = 0; channel < 3; channel++) {
+        input[channel * MODEL_SIZE * MODEL_SIZE + i] =
+          (pixels[i * 4 + channel] / 255 - MODEL_MEAN[channel]) / MODEL_STD[channel];
+      }
+    }
+
+    const tensor = new window.ort.Tensor('float32', input, [1, 3, MODEL_SIZE, MODEL_SIZE]);
+    const output = await session.run({ [session.inputNames[0]]: tensor });
+    if (sequence !== processSequence) return;
+    const mask = output[session.outputNames[0]].data;
+    let minimum = Infinity;
+    let maximum = -Infinity;
+    for (let i = 0; i < mask.length; i++) {
+      if (mask[i] < minimum) minimum = mask[i];
+      if (mask[i] > maximum) maximum = mask[i];
+    }
+    const range = maximum - minimum || 1;
+
+    const smallMask = document.createElement('canvas');
+    smallMask.width = MODEL_SIZE;
+    smallMask.height = MODEL_SIZE;
+    const smallContext = smallMask.getContext('2d');
+    const smallImage = smallContext.createImageData(MODEL_SIZE, MODEL_SIZE);
+    for (let i = 0; i < mask.length; i++) {
+      const value = Math.round((mask[i] - minimum) / range * 255);
+      const offset = i * 4;
+      smallImage.data[offset] = value;
+      smallImage.data[offset + 1] = value;
+      smallImage.data[offset + 2] = value;
+      smallImage.data[offset + 3] = 255;
+    }
+    smallContext.putImageData(smallImage, 0, 0);
+
+    const fullMask = document.createElement('canvas');
+    fullMask.width = width;
+    fullMask.height = height;
+    const fullContext = fullMask.getContext('2d', { willReadFrequently: true });
+    fullContext.imageSmoothingEnabled = true;
+    fullContext.imageSmoothingQuality = 'high';
+    fullContext.drawImage(smallMask, 0, 0, width, height);
+    const maskPixels = fullContext.getImageData(0, 0, width, height).data;
+    const alpha = new Uint8Array(width * height);
+    const rgba = new Uint8ClampedArray(original);
+    for (let i = 0; i < alpha.length; i++) {
+      alpha[i] = maskPixels[i * 4];
+      rgba[i * 4 + 3] = alpha[i];
+    }
+
+    makeMatteCanvas(alpha, width, height);
+    renderComposite(rgba, width, height);
+    resultCaption.textContent = 'U2Net-p 模型預測的主體遮罩';
+    updateCounts(alpha);
+    updateInsight();
+  } catch (error) {
+    if (sequence !== processSequence) return;
+    resultCaption.textContent = '模型處理失敗';
+    liveInsight.textContent = error.message + ' 其他色鍵方法仍可使用。';
+  }
+}
+
 function distanceBetween(r, g, b, key) {
   const dr = r - key[0];
   const dg = g - key[1];
@@ -216,6 +359,12 @@ function processImage() {
   const key = hexToRgb(keyInput.value);
   const tolerance = Number(toleranceInput.value);
   const mode = methodSelect.value;
+  const sequence = ++processSequence;
+  updateMethodCopy();
+  if (mode === 'u2net') {
+    processWithU2Net(original.data, width, height, sequence);
+    return;
+  }
   const feather = Math.max(11, tolerance * .85);
   const dominance = mode === 'dominance' ? makeDominanceParameters(key, tolerance) : null;
 
@@ -249,6 +398,7 @@ function processImage() {
   for (let i = 0; i < total; i++) rgba[i * 4 + 3] = alpha[i];
   makeMatteCanvas(alpha, width, height);
   renderComposite(rgba, width, height);
+  resultCaption.textContent = '疊在檢查底色上觀察';
   updateMethodCopy();
   updateCounts(alpha);
   updateInsight();
@@ -380,14 +530,25 @@ function updateMethodCopy() {
   const copy = {
     distance: '量每個像素離幕色多遠，越接近就越透明。',
     dominance: '估算像素有多少比例被幕色覆蓋，讓半透明的細髮保留漸層。',
-    connected: '只清除連到畫面邊界的幕色；封閉在主體內的同色細節可能留下。'
+    connected: '只清除連到畫面邊界的幕色；封閉在主體內的同色細節可能留下。',
+    u2net: 'U2Net-p（rembg 同款模型）用畫面內容預測主體遮罩；首次載入約 4.6 MB，推論在本機瀏覽器執行。'
   };
   methodSummary.textContent = copy[mode];
+  const modelMode = mode === 'u2net';
+  document.getElementById('key-controls').disabled = modelMode;
+  document.getElementById('tolerance-control').disabled = modelMode;
+  document.querySelectorAll('.chroma-toggle').forEach(function (toggle) {
+    const input = toggle.querySelector('input');
+    input.disabled = modelMode;
+    toggle.classList.toggle('is-disabled', modelMode);
+  });
   const currentTolerance = toleranceInput.value;
   toleranceValue.textContent = currentTolerance;
-  document.getElementById('tolerance-help').textContent = mode === 'dominance'
-    ? '調高會把更多像幕色的像素直接清空；alpha 仍用通道優勢估算。'
-    : '調高會清掉更多接近幕色的像素，也可能吃掉撞色細節。';
+  document.getElementById('tolerance-help').textContent = modelMode
+    ? '模型模式不使用幕色容差、邊緣修色或侵蝕。'
+    : mode === 'dominance'
+      ? '調高會把更多像幕色的像素直接清空；alpha 仍用通道優勢估算。'
+      : '調高會清掉更多接近幕色的像素，也可能吃掉撞色細節。';
 }
 
 function updateInsight() {
@@ -400,12 +561,13 @@ function updateInsight() {
   const methodNotes = {
     distance: '色差法按 RGB 距離清除接近' + keyName + '的像素；調高容差，觀察背景殘色和主體細節的取捨。',
     dominance: '通道優勢法以' + keyName + '的通道分數估 alpha；主體本身含有幕色時也可能被一起清除。',
-    connected: '邊界連通法只清除連到畫面邊界的' + keyName + '區域；封閉在主體裡的同色細節可能留下。'
+    connected: '邊界連通法只清除連到畫面邊界的' + keyName + '區域；封閉在主體裡的同色細節可能留下。',
+    u2net: 'U2Net-p 用模型從整體畫面預測主體和背景，不依賴單一幕色；細髮和相近色邊緣仍可能不完整。'
   };
   let text = (sample ? sample.insight : '') + ' ' + methodNotes[mode];
-  if (spillOn && mode !== 'connected') {
+  if (spillOn && mode !== 'connected' && mode !== 'u2net') {
     text += '邊緣修色已開啟。';
-  } else if (!spillOn && mode !== 'connected') {
+  } else if (!spillOn && mode !== 'connected' && mode !== 'u2net') {
     text += '邊緣修色目前關閉。';
   }
   liveInsight.textContent = text;
