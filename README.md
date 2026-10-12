@@ -27,7 +27,7 @@
 - [cutout-skill](https://github.com/yazelin/cutout-skill)：綠／洋紅自動判幕；藍、青、黃等第三色明確指定；另有 alpha 估算、邊界連通、despill、縮放後驗收。
 - [line-sticker-studio](https://github.com/yazelin/line-sticker-studio)：貼圖工作流程與逐張參數調整。
 - [bye-bg](https://github.com/yazelin/bye-bg)：單色背景走色鍵，一般照片走瀏覽器端 AI 遮罩。
-- [ai-sticker-starter](https://github.com/yazelin/ai-sticker-starter)：從綠幕九宮格比較簡易門檻與完整處理流程。
+- [line-chat-maker](https://github.com/yazelin/line-chat-maker)：AI 貼圖格盤切格與綠幕去背，包含四角取樣、柔化透明邊緣、綠溢抑制與純邏輯測試。
 
 ## 本機預覽
 
