@@ -171,9 +171,9 @@
       <div class="section-heading">
         <div>
           <p class="eyebrow">02 — HOW THE PIXELS CHANGE</p>
-          <h2>去背其實在回答三個問題</h2>
+          <h2>四種方法各自依賴不同線索</h2>
         </div>
-        <p class="section-intro">「這個像素像不像幕色？」「它是背景的一部分嗎？」「它有多少比例是主體？」不同算法回答問題的方式不同。</p>
+        <p class="section-intro">色鍵看像素顏色和邊界連通；U2Net-p 則從整張影像預測主體遮罩。素材不同，能依賴的線索也不同。</p>
       </div>
 
       <div class="method-cards">
@@ -206,6 +206,18 @@
             <span class="connect-label">從外框開始找</span><span class="connect-label">內部封閉色塊保留</span>
           </div>
           <p class="method-tradeoff"><strong>優點</strong>保留和背景同色、但被主體包住的細節。<strong>限制</strong>輪廓有缺口時，背景可能從缺口灌進主體。</p>
+        </article>
+
+        <article class="method-explainer method-model">
+          <div class="method-topline"><span class="method-number">04</span><span class="method-tag">整體影像判斷</span></div>
+          <h3>U2Net-p 模型遮罩</h3>
+          <p>模型不需要指定幕色，而是從整張影像的形狀、紋理和上下文推測主體，輸出灰階遮罩，再把遮罩值當作每個像素的 alpha。</p>
+          <div class="model-flow" role="img" aria-label="整張影像輸入 U2Net-p 模型，輸出 alpha 遮罩">
+            <span>整張影像</span><b aria-hidden="true">→</b><span class="model-flow-model">U2Net-p<br>模型推論</span><b aria-hidden="true">→</b><span class="model-flow-mask">alpha 遮罩</span>
+          </div>
+          <p class="method-tradeoff"><strong>優點</strong>可處理沒有單一幕色的自然照片。<strong>限制</strong>模型可能漏掉細髮、透明物件或近色邊緣；要放大檢查並視需要修遮罩。</p>
+          <a class="method-source-link" href="https://github.com/danielgatis/rembg" target="_blank" rel="noopener">查看 rembg 專案與模型說明 ↗</a>
+          <p class="model-runtime-note">本頁用 ONNX Runtime Web 在瀏覽器推論；首次載入約 4.6 MB，圖片不會上傳。</p>
         </article>
       </div>
 
@@ -245,13 +257,13 @@
           <p class="eyebrow">03 — PICK THE RIGHT TOOL</p>
           <h2>先看背景，再選去背方式</h2>
         </div>
-        <p class="section-intro">把幕色當成拍攝或生圖規格的一部分。好素材能讓簡單、可預期的算法勝過複雜修補。</p>
+        <p class="section-intro">單色幕通常先試色鍵；自然照片可試 U2Net-p 主體遮罩，再檢查模型留下的輪廓。</p>
       </div>
       <div class="decision-table" role="table" aria-label="素材條件與建議去背方法">
         <div class="decision-row decision-header" role="row"><span role="columnheader">素材狀況</span><span role="columnheader">建議方法</span><span role="columnheader">要特別檢查</span></div>
         <div class="decision-row" role="row"><span class="condition" role="cell"><i class="status-dot status-good"></i>平坦、單一且和主體分色的幕</span><span role="cell"><strong>色鍵 + alpha 邊緣 + despill</strong></span><span role="cell">四角是否透明；髮絲、鬍鬚、透明配件是否還在。</span></div>
         <div class="decision-row" role="row"><span class="condition" role="cell"><i class="status-dot status-warn"></i>主體本身有幕色附近的顏色</span><span role="cell"><strong>先換幕色；必要時用局部遮罩</strong></span><span role="cell">有沒有整片衣物、葉子或配件被誤刪。</span></div>
-        <div class="decision-row" role="row"><span class="condition" role="cell"><i class="status-dot status-ai"></i>一般照片、漸層或複雜背景</span><span role="cell"><strong>主體分割或 AI 遮罩</strong></span><span role="cell">模型可能漏掉細髮；放大檢查並修邊。</span></div>
+        <div class="decision-row" role="row"><span class="condition" role="cell"><i class="status-dot status-ai"></i>一般照片、漸層或複雜背景</span><span role="cell"><strong>主體分割模型，例如 U2Net-p</strong></span><span role="cell">模型從整張影像預測主體 alpha，不依賴單一幕色；細髮、透明物和近色邊緣仍可能漏判，需放大檢查並修遮罩。</span></div>
         <div class="decision-row" role="row"><span class="condition" role="cell"><i class="status-dot status-stop"></i>黑、白、灰底，或背景和主體同色</span><span role="cell"><strong>色鍵不適用；改用遮罩或重新準備素材</strong></span><span role="cell">色鍵靠色度差辨認，沒有色度的灰階底很難安全分離。</span></div>
       </div>
       <p class="decision-footnote">綠、洋紅、藍沒有固定排名。選哪一色，取決於主體裡有哪些顏色、幕面夠不夠均勻，以及你的輸出用途。</p>
